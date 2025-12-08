@@ -181,16 +181,57 @@
       font-weight: 400;
     }
 
-    .profile-btn {
+    /* Notification Bell */
+    .notification-bell {
+      position: relative;
       cursor: pointer;
-      padding: 8px 16px;
-      border-radius: 8px;
-      transition: 0.2s;
-      user-select: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      font-size: 20px;
     }
 
-    .profile-btn:hover {
-      background: var(--border);
+    .notification-bell:hover {
+      background: var(--bg);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: scale(1.05);
+    }
+
+    .notification-bell:active {
+      transform: scale(0.95);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 18px;
+      height: 18px;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      border: 2px solid var(--card);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
     }
 
     /* Page styles */
@@ -1025,7 +1066,10 @@
         <span id="currentPageTitle">Dashboard</span>
         <span class="date-display" id="currentDate"></span>
       </div>
-      <div class="profile-btn">👤 Profile</div>
+      <div class="notification-bell" id="notificationBell" title="Notifications">
+        🔔
+        <span class="notification-badge" id="notificationBadge">3</span>
+      </div>
     </div>
 
     <!-- DASHBOARD PAGE -->
@@ -1492,6 +1536,9 @@
       document.body.classList.add("dark");
       document.getElementById("darkToggle").classList.add("active");
     }
+
+    // Notification bell setup
+    setupNotificationBell();
   });
 
   // Update current date display
@@ -1658,6 +1705,7 @@
     renderGoals();
     updateDashboard();
     checkBudgetAlerts();
+    updateNotificationCount();
     closeModal('goalModal');
   });
 
@@ -1712,6 +1760,7 @@
       localStorage.setItem('goals', JSON.stringify(goals));
       renderGoals();
       updateDashboard();
+      updateNotificationCount();
       showToast('Goal deleted', 'success');
     }
   }
@@ -2504,7 +2553,8 @@
 
   // Dark mode
   function toggleDarkMode() {
-    const darkToggle = document.getElementById("darkToggle");
+    const darkToggle = doc
+    ument.getElementById("darkToggle");
     darkToggle.classList.toggle("active");
     document.body.classList.toggle("dark");
     localStorage.setItem("darkMode", document.body.classList.contains("dark"));
@@ -2527,6 +2577,45 @@
       showToast('Email updated', 'success');
     }
   });
+
+  // Notification bell setup
+  function setupNotificationBell() {
+    const notificationBell = document.getElementById('notificationBell');
+    const notificationBadge = document.getElementById('notificationBadge');
+
+    if (notificationBell) {
+      notificationBell.addEventListener('click', function() {
+        showToast('You have budget alerts - check your goals', 'warning');
+        // Update notification count
+        updateNotificationCount();
+      });
+    }
+
+    // Update notification count based on budget alerts
+    updateNotificationCount();
+  }
+
+  function updateNotificationCount() {
+    const notificationBadge = document.getElementById('notificationBadge');
+    if (!notificationBadge) return;
+
+    // Count budget alerts
+    let alertCount = 0;
+    goals.forEach(goal => {
+      const spent = calculateGoalSpent(goal);
+      const percentage = (spent / goal.amount) * 100;
+      if (percentage >= 80) {
+        alertCount++;
+      }
+    });
+
+    if (alertCount > 0) {
+      notificationBadge.textContent = alertCount.toString();
+      notificationBadge.style.display = 'flex';
+    } else {
+      notificationBadge.style.display = 'none';
+    }
+  }
 
 </script>
 
